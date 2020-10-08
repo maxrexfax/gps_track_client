@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/tvItemLat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:text="TextView"
+        />
+    <TextView
+        android:id="@+id/tvItemLon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:text="TextView"
+        />
+    <TextView
+        android:id="@+id/tvItemDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:text="TextView"
+        />
+    <TextView
+        android:id="@+id/tvItemTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:text="TextView"
+        />
+    <TextView
+        android:id="@+id/tvItemDescr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:text="TextView"
+        />
+    <TextView
+        android:id="@+id/tvItemId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        />
+</LinearLayout>

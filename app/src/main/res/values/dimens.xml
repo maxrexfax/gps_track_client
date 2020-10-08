@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="text_lat_lon_time_main">20sp</dimen>
+    <dimen name="text_lat_lon_info_main">30sp</dimen>
+    <dimen name="text_time_info_main">25sp</dimen>
+    <dimen name="text_usual_size">20sp</dimen>
+    <dimen name="text_big_usual_size">30sp</dimen>
+
+    <dimen name="padding_horiz_usual_size">10sp</dimen>
+</resources>

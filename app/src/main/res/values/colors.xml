@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="colorGreenServiceWork">#C5F891</color>
+    <color name="colorGreenServiceOffk2">#E9F7F7</color>
+    <color name="colorGrayServiceOff">#C7C6C5</color>
+    <color name="colorGrenTextGPSon">#4CAF50</color>
+    <color name="colorGrayTextGPSoff">#777675</color>
+    <color name="colorBlackText">#070707</color>
+
+    <color name="colorForBackgroundEt">#F5F0EB</color>
+    <color name="colorForBackgroundAlert">#F5938C</color>
+    <color name="colorForBackgroundMainActivity">#D1F7F7</color>
+    <color name="colorForBackgroundMainActivityDark">#B7F1F1</color>
+    <color name="colorForBackgroundMainActivityDarkServiseOff">#A6D1D1</color>
+</resources>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/colorForBackgroundMainActivity"
+    android:padding="5dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="50"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="gravity"
+            android:gravity="center_vertical|center"
+            android:text="@string/tv_list_of_all_points"
+            />
+        <ListView
+            android:id="@+id/llv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:dividerHeight="0dp"
+            android:divider="@android:color/transparent"/>
+
+    </LinearLayout>
+    <Button
+        android:id="@+id/buttonShowHidePointsDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClickD"
+        android:text="@string/btn_show_hide_sql_delete_points" />
+    <LinearLayout
+        android:id="@+id/llSqlPoints"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/colorForBackgroundAlert"
+            android:gravity="center_vertical|center"
+            android:text="@string/btn_label_confirm_delete_points"
+            android:textAlignment="gravity"
+            android:textColor="@color/colorBlackText"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/buttonDeletePoints"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onClickD"
+            android:background="@color/colorPrimaryDark"
+            android:text="@string/btn_delete_data" />
+    </LinearLayout>
+    <Space
+        android:layout_width="1dp"
+        android:layout_height="30dp"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="tracks found - 1000"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="50"
+        android:orientation="vertical">
+    <Button
+        android:id="@+id/buttonShowHideAllTracksDel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClickD"
+        android:text="@string/btn_show_hide_sql_delete_all_tracks" />
+    <LinearLayout
+        android:id="@+id/llSqlTracks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/colorForBackgroundAlert"
+            android:gravity="center_vertical|center"
+            android:text="@string/btn_label_confirm_delete_tracks"
+            android:textAlignment="gravity"
+            android:textColor="@color/colorBlackText"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/buttonDeleteTrack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onClickD"
+            android:background="@color/colorPrimaryDark"
+            android:text="@string/btn_delete_data" />
+    </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
