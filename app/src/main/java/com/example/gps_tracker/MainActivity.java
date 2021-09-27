@@ -2,9 +2,11 @@ package com.example.gps_tracker;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -25,6 +27,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
@@ -42,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 
@@ -74,12 +79,14 @@ public class MainActivity extends Activity {
     private boolean isGpsEnabled;
     String[] latLonTime;
     private int colorTrackingOn, colorTrackingOff;
+    public String android_id;
 
     String sendUrl1 = "http://maxbarannyk.ru/gps-serv/func.php?command=insertcoord";
+    String sendUrlData = "http://maxbarannyk.ru/saveDataQwu.php";
+    String sendUrlPoint = "http://maxbarannyk.ru/savePointQwu.php";
     String dataToSend = "someString";
     String res = "EMPTY";
     String user = "";
-    private String android_id;
     private String user_login;
     /*В базе и андроид приложении
     Внести коррективы для сохранения идентификатора клиента.
@@ -140,6 +147,16 @@ public class MainActivity extends Activity {
             threadChecker.setDaemon(true);
             threadChecker.start();
             isThreadStarted = true;
+        }
+
+
+        if (isNetwork(getApplicationContext())){
+
+            Toast.makeText(getApplicationContext(), "Internet Connected", Toast.LENGTH_SHORT).show();
+
+        } else {
+
+            Toast.makeText(getApplicationContext(), "Internet Is Not Connected", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -339,7 +356,18 @@ public class MainActivity extends Activity {
                         Log.d("TAG1", "Activity insertion complete. row ID " + rowId );
                     else
                         Log.d("TAG1", "Activity insertion error " + rowId );
-                    Toast.makeText(this, R.string.toast_point_saved, Toast.LENGTH_SHORT).show();
+                    String urlParameters = "lat=" + latLonTime[0]
+                            + "&long=" + latLonTime[1]
+                            + "&time=" + getDate()
+                            + "&descr=_ANDROID_ " + etCommentPoint.getText().toString()
+                            + "&sender_id=" + android_id;
+
+                    Log.d("TAG1", "urlParameters: " +  urlParameters);
+                    String resultPostSend = sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
+                    Log.d("TAG1", "Send POST result: " + resultPostSend);
+
+                    //Toast.makeText(this, R.string.toast_point_saved, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "resultPostSend=" + resultPostSend, Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.btnLocationSettings:
@@ -584,5 +612,61 @@ public class MainActivity extends Activity {
             Toast.makeText(MainActivity.this,  "Сервис остановлен", Toast.LENGTH_SHORT).show();
             return false;
         }
+    }
+
+    public String sendDataToServerByPost(String urlToSendData, String urlParameters) {
+        HttpURLConnection connection = null;
+
+        try {
+            //Create connection
+            URL url = new URL(urlToSendData);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type",
+                    "application/x-www-form-urlencoded");
+
+            connection.setRequestProperty("Content-Length",
+                    Integer.toString(urlParameters.getBytes().length));
+            connection.setRequestProperty("Content-Language", "en-US");
+
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+
+            //Send request
+            DataOutputStream wr = new DataOutputStream (
+                    connection.getOutputStream());
+            wr.writeBytes(urlParameters);
+            wr.close();
+
+            //Get Response
+            InputStream is = connection.getInputStream();
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+            String line;
+            while ((line = rd.readLine()) != null) {
+                response.append(line);
+                response.append('\r');
+            }
+            rd.close();
+            return response.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    public boolean isNetwork(Context context) {
+
+        ConnectivityManager cm = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        }
+        return false;
     }
 }

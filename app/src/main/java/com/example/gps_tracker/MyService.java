@@ -54,6 +54,8 @@ public class MyService extends Service {
     private String user_login;
 
     String sendUrl1 = "http://maxbarannyk.ru/gps-serv/func.php?command=insertcoord";
+    String sendUrlData = "http://maxbarannyk.ru/saveDataQwu.php";
+    String sendUrlPoint = "http://maxbarannyk.ru/savePointQwu.php";
     String dataToSend = "emptyString";
     String res = "EMPTY";
     String user = "maxrexfax";
