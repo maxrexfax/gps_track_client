@@ -31,6 +31,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -363,11 +364,12 @@ public class MainActivity extends Activity {
                             + "&sender_id=" + android_id;
 
                     Log.d("TAG1", "urlParameters: " +  urlParameters);
-                    String resultPostSend = sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
-                    Log.d("TAG1", "Send POST result: " + resultPostSend);
+                    //sendDataToServerByPost("http://maxbarannyk.ru/api/getip", urlParameters);
+                    /*String resultPostSend =*/ sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
+                    //Log.d("TAG1", "Send POST result: " + resultPostSend);
 
                     //Toast.makeText(this, R.string.toast_point_saved, Toast.LENGTH_SHORT).show();
-                    Toast.makeText(this, "resultPostSend=" + resultPostSend, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "resultPostSend=" + resultPostSend, Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.btnLocationSettings:
@@ -614,49 +616,78 @@ public class MainActivity extends Activity {
         }
     }
 
-    public String sendDataToServerByPost(String urlToSendData, String urlParameters) {
-        HttpURLConnection connection = null;
+    public void sendDataToServerByPost(String urlToSendData, String urlParameters) {
 
-        try {
-            //Create connection
-            URL url = new URL(urlToSendData);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type",
-                    "application/x-www-form-urlencoded");
 
-            connection.setRequestProperty("Content-Length",
-                    Integer.toString(urlParameters.getBytes().length));
-            connection.setRequestProperty("Content-Language", "en-US");
+        Handler handler = new Handler();  //Optional. Define as a variable in your activity.
 
-            connection.setUseCaches(false);
-            connection.setDoOutput(true);
+        Runnable r = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                HttpURLConnection connection = null;
+                String res = "Empty";
+                try {
 
-            //Send request
-            DataOutputStream wr = new DataOutputStream (
-                    connection.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.close();
+                    //Create connection
+                    URL url = new URL(urlToSendData);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setRequestProperty("Content-Type",
+                            "application/x-www-form-urlencoded");
 
-            //Get Response
-            InputStream is = connection.getInputStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-            StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
-            String line;
-            while ((line = rd.readLine()) != null) {
-                response.append(line);
-                response.append('\r');
+                    connection.setRequestProperty("Content-Length",
+                            Integer.toString(urlParameters.getBytes().length));
+                    connection.setRequestProperty("Content-Language", "en-US");
+
+                    connection.setUseCaches(false);
+                    connection.setDoOutput(true);
+
+                    //Send request
+                    DataOutputStream wr = new DataOutputStream (
+                            connection.getOutputStream());
+                    wr.writeBytes(urlParameters);
+                    wr.close();
+
+                    //Get Response
+                    InputStream is = connection.getInputStream();
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+                    String line;
+                    while ((line = rd.readLine()) != null) {
+                        response.append(line);
+                        response.append('\r');
+                    }
+                    rd.close();
+                    res = response.toString();
+                    Log.d("TAG1", "Net send return result=" + res);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("TAG1", "Net send return result=" + e.getMessage());
+                } finally {
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
+                final String fRes = res;
+                handler.post(new Runnable()  //If you want to update the UI, queue the code on the UI thread
+                {
+                    public void run()
+                    {
+                        makeToast(fRes);
+                    }
+                });
             }
-            rd.close();
-            return response.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
+        };
+
+        Thread t = new Thread(r);
+        t.start();
+
+    }
+
+    public void makeToast(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     public boolean isNetwork(Context context) {

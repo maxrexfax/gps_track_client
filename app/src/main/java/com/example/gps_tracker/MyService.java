@@ -12,6 +12,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -21,7 +22,9 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -197,7 +200,7 @@ public class MyService extends Service {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)==
                 PackageManager.PERMISSION_GRANTED)
         {
-            Log.d("TAG1", "INTERNET PERMISSION_GRANTED");
+            //Log.d("TAG1", "INTERNET PERMISSION_GRANTED");
             Map<String, String> map = new HashMap<String, String>();
             map.put("android_id", android_id);
             map.put("user_login", user_login);
@@ -207,63 +210,91 @@ public class MyService extends Service {
             JSONArray jsonArray = new JSONArray(Arrays.asList(map));
             Log.d("TAG1", "Service jsonArray=" + jsonArray);
             //testSend(android_id + "_" + latTmp+"_"+lonTmp+"_"+getDate());
-            testSend(jsonArray.toString());
+
+
+            String urlParameters = "lat=" + latTmp
+                    + "&long=" + lonTmp
+                    + "&time=" + getDate()
+                    + "&sender_id=" + android_id;
+            sendDataToServerByPost("http://maxbarannyk.ru/saveDataQwu.php", urlParameters);
+            //testSend(jsonArray.toString());
         }
         else{
             Log.d("TAG1", "Service - INTERNET DENY");
         }
         return "";
     }
-    private void testSend(String dataSend){
-        user = "maxrexfax";
-        Log.d("TAG1", "private void test2 START");
-        final String finalUrl = sendUrl1+"&user="+user+ "&data="+dataSend;
-        Log.d("TAG1", "finalUrl===" + finalUrl);
-        Thread background = new Thread(new Runnable() {
-            // After call for background.start this run method call
-            public void run() {
+
+
+    public void sendDataToServerByPost(String urlToSendData, String urlParameters) {
+
+
+        Handler handler = new Handler();  //Optional. Define as a variable in your activity.
+
+        Runnable r = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                HttpURLConnection connection = null;
+                String res = "Empty";
                 try {
-                    try {
-                        Log.d("TAG1", "test2  TRY 0001");
-                        URL url = new URL(finalUrl);
-                        Log.d("TAG1", "test2  TRY 0002");
-                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                        Log.d("TAG", "test2  TRY 0003");
-                        if (con.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                            Log.d("TAG1", "TRY 0004  HttpURLConnection.HTTP_OK");
-                            //Если запрос выполнен удачно, читаем полученные данные и далее, делаем что-то
-                            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                            res = in.readLine();
-                            in.close();
-                            Log.d("TAG1", "TRY 0005  IF HTTP_OK res=" + res);
-                            //textView02.setText("Result: " + res);
-                            //String res = new BufferedReader(new InputStreamReader(con.getInputStream())).readLine();
-                        } else {
-                            Log.d("TAG1", "TRY 0006 con.getResponseCode()=" + con.getResponseCode());
-                            //Если запрос выполнен не удачно, делаем что-то другое
-                            res = "FAILURE!!";
-                            //textView02.setText("Result: " + res);
-                            Log.d("TAG1", "test2  007 else HTTP_FAIL res=" + res);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.d("TAG1", "008 private String getDataFromUrl catch IOException=" + e.getMessage());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.d("TAG1", "009 private String getDataFromUrl catch Exception=" + e.getMessage() + " " + e.getLocalizedMessage());
-                       }
-                    Log.d("TAG1", "010 private String getDataFromUrl return result=" + res);
-                    //textView02.setText(res);
-                } catch (Throwable t) {
-                    // just end the background thread
-                    Log.d("TAG1", "public void run Thread  exception " + t);                       }
+
+                    //Create connection
+                    URL url = new URL(urlToSendData);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setRequestProperty("Content-Type",
+                            "application/x-www-form-urlencoded");
+
+                    connection.setRequestProperty("Content-Length",
+                            Integer.toString(urlParameters.getBytes().length));
+                    connection.setRequestProperty("Content-Language", "en-US");
+
+                    connection.setUseCaches(false);
+                    connection.setDoOutput(true);
+
+                    //Send request
+                    DataOutputStream wr = new DataOutputStream (
+                            connection.getOutputStream());
+                    wr.writeBytes(urlParameters);
+                    wr.close();
+
+                    //Get Response
+                    InputStream is = connection.getInputStream();
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+                    String line;
+                    while ((line = rd.readLine()) != null) {
+                        response.append(line);
+                        response.append('\r');
+                    }
+                    rd.close();
+                    res = response.toString();
+                    Log.d("TAG1", "Net send return result=" + res);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("TAG1", "Net send return result=" + e.getMessage());
+                } finally {
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
+                final String fRes = res;
+                handler.post(new Runnable()  //If you want to update the UI, queue the code on the UI thread
+                {
+                    public void run()
+                    {
+                        Log.d("TAG1", "Net save GPS data:" + fRes);
+                        //makeToast(fRes);
+                    }
+                });
             }
+        };
 
+        Thread t = new Thread(r);
+        t.start();
 
-
-        });
-        // Start Thread
-        background.start();
     }
 
     private void checkEnabled() {
