@@ -34,7 +34,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.provider.Settings.Secure;
+
 import java.util.Arrays;
+
 import org.json.JSONArray;
 
 public class MyService extends Service {
@@ -47,9 +49,11 @@ public class MyService extends Service {
     private SimpleCursorAdapter adapter;
     private Cursor result;
     public static MyService instance = null;
+
     public MyService() {
         Context context = this;
     }
+
     private Double flLatReceived, flLonReceived, flLatSaved, flLonSaved;
     private ThreadServiceChecker threadServiceChecker;
     private static final int TAG_CODE_PERMISSION_INTERNET = 6567;
@@ -62,14 +66,17 @@ public class MyService extends Service {
     String dataToSend = "emptyString";
     String res = "EMPTY";
     String user = "maxrexfax";
+    private RequestSenderHelper requestSenderHelper;
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
 
     }
+
     @Override
-    public void onCreate(){
+    public void onCreate() {
         Log.d("TAG1", "Service onCreate worked");
         android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
         user_login = "max_admin";
@@ -100,7 +107,8 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         //Log.d("TAG1", "Service onStartCommand.worked");
         //return super.onStartCommand(intent, flags, startId);
-        return START_STICKY;
+        //return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
     @Override
@@ -131,15 +139,15 @@ public class MyService extends Service {
 
         @Override
         public void onProviderEnabled(String provider) {
-            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-                    PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                            PackageManager.PERMISSION_GRANTED) {
-                showLocation(locationManager.getLastKnownLocation(provider));
-            } else {
-                //onDestroy();
-            }
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                        PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                                PackageManager.PERMISSION_GRANTED) {
+                    showLocation(locationManager.getLastKnownLocation(provider));
+                } else {
+                    //onDestroy();
+                }
             }
         }
 
@@ -169,8 +177,8 @@ public class MyService extends Service {
             return "";
         String latTmp = "", lonTmp = "";
 
-        latTmp = String.format("%1$.6f", location.getLatitude()).replace(',','.');
-        lonTmp = String.format("%1$.6f", location.getLongitude()).replace(',','.');
+        latTmp = String.format("%1$.6f", location.getLatitude()).replace(',', '.');
+        lonTmp = String.format("%1$.6f", location.getLongitude()).replace(',', '.');
         flLatReceived = Double.parseDouble(latTmp);
         flLonReceived = Double.parseDouble(lonTmp);
 
@@ -187,19 +195,15 @@ public class MyService extends Service {
         //flLatReceived, flLonReceived, flLatSaved, flLonSaved
         cv.put("_delivered", 0);
         long rowId = db.insert("Coordinates", null, cv);
-        if(rowId!=-1)
-            Log.d("TAG1", "service insertion complete. row ID " + rowId );
+        if (rowId != -1)
+            Log.d("TAG1", "service insertion complete. row ID " + rowId);
         else
-            Log.d("TAG1", "service insertion error " + rowId );
-        /*return String.format(
-                "Coordinates: lat = %1$.4f, lon = %2$.4f, time = %3$tF %3$tT",
-                location.getLatitude(), location.getLongitude(), new Date(
-                        location.getTime()));*/
+            Log.d("TAG1", "service insertion error " + rowId);
 
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)==
-                PackageManager.PERMISSION_GRANTED)
-        {
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) ==
+                PackageManager.PERMISSION_GRANTED) {
             //Log.d("TAG1", "INTERNET PERMISSION_GRANTED");
             Map<String, String> map = new HashMap<String, String>();
             map.put("android_id", android_id);
@@ -216,91 +220,22 @@ public class MyService extends Service {
                     + "&long=" + lonTmp
                     + "&time=" + getDate()
                     + "&sender_id=" + android_id;
-            sendDataToServerByPost("http://maxbarannyk.ru/saveDataQwu.php", urlParameters);
+
+            requestSenderHelper = new RequestSenderHelper(this, sendUrlData, urlParameters);
+            requestSenderHelper.sendDataToServerByGet();
             //testSend(jsonArray.toString());
-        }
-        else{
+        } else {
             Log.d("TAG1", "Service - INTERNET DENY");
         }
         return "";
     }
 
 
-    public void sendDataToServerByPost(String urlToSendData, String urlParameters) {
-
-
-        Handler handler = new Handler();  //Optional. Define as a variable in your activity.
-
-        Runnable r = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                HttpURLConnection connection = null;
-                String res = "Empty";
-                try {
-
-                    //Create connection
-                    URL url = new URL(urlToSendData);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setRequestProperty("Content-Type",
-                            "application/x-www-form-urlencoded");
-
-                    connection.setRequestProperty("Content-Length",
-                            Integer.toString(urlParameters.getBytes().length));
-                    connection.setRequestProperty("Content-Language", "en-US");
-
-                    connection.setUseCaches(false);
-                    connection.setDoOutput(true);
-
-                    //Send request
-                    DataOutputStream wr = new DataOutputStream (
-                            connection.getOutputStream());
-                    wr.writeBytes(urlParameters);
-                    wr.close();
-
-                    //Get Response
-                    InputStream is = connection.getInputStream();
-                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                    StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
-                    String line;
-                    while ((line = rd.readLine()) != null) {
-                        response.append(line);
-                        response.append('\r');
-                    }
-                    rd.close();
-                    res = response.toString();
-                    Log.d("TAG1", "Net send return result=" + res);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.d("TAG1", "Net send return result=" + e.getMessage());
-                } finally {
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-                }
-                final String fRes = res;
-                handler.post(new Runnable()  //If you want to update the UI, queue the code on the UI thread
-                {
-                    public void run()
-                    {
-                        Log.d("TAG1", "Net save GPS data:" + fRes);
-                        //makeToast(fRes);
-                    }
-                });
-            }
-        };
-
-        Thread t = new Thread(r);
-        t.start();
-
-    }
 
     private void checkEnabled() {
-        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
-        }else{
+        } else {
             Toast.makeText(this, "Enable GPS or stop tracking!", Toast.LENGTH_SHORT).show();
         }
     }
@@ -309,6 +244,7 @@ public class MyService extends Service {
         startActivity(new Intent(
                 android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
     }
+
     private String getDate() {
         java.sql.Date currentDate = new java.sql.Date(System.currentTimeMillis());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");

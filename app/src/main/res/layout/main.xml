@@ -247,13 +247,6 @@
             android:onClick="onClick"
             android:text="@string/btn_data_activity" />
 
-            <Button
-                android:id="@+id/buttonNetSave"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onClick"
-                android:text="@string/btn_net_send" />
         <TextView
             android:id="@+id/tvDebugging1"
             android:layout_width="match_parent"

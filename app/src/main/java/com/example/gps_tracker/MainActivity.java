@@ -42,6 +42,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.provider.Settings.Secure;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,8 +55,7 @@ public class MainActivity extends Activity {
     private static final int TAG_CODE_PERMISSION_LOCATION = 444;
     private static final int TAG_CODE_PERMISSION_STORAGE = 345;
     private static final int TAG_CODE_PERMISSION_INTERNET = 6567;
-    TextView tvEnabledGPS, tvTitleServiceStat;
-    TextView textViewServiceStatus;
+    TextView tvEnabledGPS, tvTitleServiceStat, textViewServiceStatus;
     TextView tvDebug1, tvDebug2, tvDebug3;
     TextView tvLongInMain, tvLatInMain, tvTimeInMain;
     private EditText etCommentPoint;
@@ -68,8 +68,8 @@ public class MainActivity extends Activity {
     private static final String TEXT_SAVE_COORD = "TEXT_SAVE_COORD";
     private static final String TEXT_SAVE_THREAD_STATE = "TEXT_SAVE_THRST";
     private boolean isThreadStarted = false;
-    File docsFolder;
-    Double latTmp, lonTmp;
+    private File docsFolder;
+    private Double latTmp, lonTmp;
     private static final String BROADCAST_DATA = "broacasting_service";
     private static final String BROADCAST_KEY = "broacasting_key";
     private BroadcastReceiver broadcastReceiver;
@@ -81,14 +81,14 @@ public class MainActivity extends Activity {
     String[] latLonTime;
     private int colorTrackingOn, colorTrackingOff;
     public String android_id;
+    private RequestSenderHelper requestSenderHelper;
 
-    String sendUrl1 = "http://maxbarannyk.ru/gps-serv/func.php?command=insertcoord";
     String sendUrlData = "http://maxbarannyk.ru/saveDataQwu.php";
     String sendUrlPoint = "http://maxbarannyk.ru/savePointQwu.php";
-    String dataToSend = "someString";
     String res = "EMPTY";
     String user = "";
     private String user_login;
+
     /*В базе и андроид приложении
     Внести коррективы для сохранения идентификатора клиента.
 
@@ -136,39 +136,31 @@ public class MainActivity extends Activity {
         db = connector.getWritableDatabase();
         /*connectorForPoints = new SQLiteConnector(this, "CoordPoints", 1);
         dbPoints = connectorForPoints.getWritableDatabase();*/
-        if(savedInstanceState!=null){
+        if (savedInstanceState != null) {
             lastCoord = (savedInstanceState.getString(TEXT_SAVE_COORD));
             isThreadStarted = (savedInstanceState.getBoolean(TEXT_SAVE_THREAD_STATE));
         }
         //проверка существования и создание папки
         docsFolder = new File(Environment.getExternalStorageDirectory() + "/Download");
         checkAndCreateFolder();
-        if(isThreadStarted==false){
+        if (isThreadStarted == false) {
             threadChecker = new ThreadChecker(this);
             threadChecker.setDaemon(true);
             threadChecker.start();
             isThreadStarted = true;
         }
 
-
-        if (isNetwork(getApplicationContext())){
-
-            Toast.makeText(getApplicationContext(), "Internet Connected", Toast.LENGTH_SHORT).show();
-
-        } else {
-
-            Toast.makeText(getApplicationContext(), "Internet Is Not Connected", Toast.LENGTH_SHORT).show();
-        }
+        checkIfInternetIsOn();
     }
 
+
     private void displayServiceStatus(int serviceStatus) {
-        if(serviceStatus==0){
+        if (serviceStatus == 0) {
             //textViewServiceStatus.setBackgroundColor(backColorServiceOff);
             textViewServiceStatus.setText(R.string.tv_tracking_off);
             tvTitleServiceStat.setText(R.string.tv_tracking_off_short);
             tvTitleServiceStat.setTextColor(colorTrackingOff);
-        }
-        else if(serviceStatus==1){
+        } else if (serviceStatus == 1) {
             //textViewServiceStatus.setBackgroundColor(backColorServiceOn);
             textViewServiceStatus.setText(R.string.tv_tracking_on);
             tvTitleServiceStat.setText(R.string.tv_tracking_on_short);
@@ -179,21 +171,21 @@ public class MainActivity extends Activity {
     //создание постоянной папки для сохранения отчетов
     private void checkAndCreateFolder() {
         boolean isCreated;
-        if(isExternalStorageWritable()) {
+        if (isExternalStorageWritable()) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_GRANTED){
-            if (!docsFolder.exists()) {
-                Log.d("TAG", "Папка отсутствует, попытка создания");
-                isCreated = docsFolder.mkdir();
-                if (isCreated) {
-                    Log.d("TAG", "Папка создана");
+                    == PackageManager.PERMISSION_GRANTED) {
+                if (!docsFolder.exists()) {
+                    Log.d("TAG", "Папка отсутствует, попытка создания");
+                    isCreated = docsFolder.mkdir();
+                    if (isCreated) {
+                        Log.d("TAG", "Папка создана");
+                    } else {
+                        Log.d("TAG", "Ошибка создания папки");
+                    }
                 } else {
-                    Log.d("TAG", "Ошибка создания папки");
+                    Log.d("TAG", "Папка существует, создавать не нужно");
                 }
             } else {
-                Log.d("TAG", "Папка существует, создавать не нужно");
-            }
-        }else {
                 ActivityCompat.requestPermissions(this, new String[]{
                                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         TAG_CODE_PERMISSION_STORAGE);
@@ -282,10 +274,10 @@ public class MainActivity extends Activity {
             return;
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
             lastCoord = formatLocation(location);
-            latLonTime[0] = String.format("%1$.6f", location.getLatitude()).replace(',','.');
+            latLonTime[0] = String.format("%1$.6f", location.getLatitude()).replace(',', '.');
             latTmp = Double.parseDouble(latLonTime[0]);
             tvLatInMain.setText(latLonTime[0]);
-            latLonTime[1] = String.format("%1$.6f", location.getLongitude()).replace(',','.');
+            latLonTime[1] = String.format("%1$.6f", location.getLongitude()).replace(',', '.');
             lonTmp = Double.parseDouble(latLonTime[1]);
             tvLongInMain.setText(latLonTime[1]);
             latLonTime[2] = getDate();
@@ -310,14 +302,12 @@ public class MainActivity extends Activity {
 
 
     private void checkEnabled() {
-        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))//GPS сенсор включен
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))//GPS сенсор включен
         {
             tvEnabledGPS.setText(R.string.tv_gps_sensor_on);
             tvEnabledGPS.setTextColor(textColorServiceOn);
             isGpsEnabled = true;//флаг, значит включать сервис можно
-        }
-        else
-        {
+        } else {
             tvEnabledGPS.setText(R.string.tv_gps_sensor_off);
             tvEnabledGPS.setTextColor(textColorServiceOff);
             isGpsEnabled = false;//включать сервис нельзя!
@@ -328,17 +318,16 @@ public class MainActivity extends Activity {
     }
 
 
-    public void showToast(String strToShow){
+    public void showToast(String strToShow) {
         Toast.makeText(this, strToShow, Toast.LENGTH_LONG).show();
     }
 
-    public void onClick(View view){
-        switch(view.getId()){
+    public void onClick(View view) {
+        switch (view.getId()) {
             case R.id.buttonGetCoord:
-                if(latLonTime[0] == null){
+                if (latLonTime[0] == null) {
                     Toast.makeText(this, R.string.tv_state_not_set, Toast.LENGTH_SHORT).show();
-                }
-                else{
+                } else {
                     //TODO вот тут сохраняем координаты временной точки во вторую таблицу
                     ContentValues cv1 = new ContentValues();//хранилище
                     String dates[] = latLonTime[2].split(" ");
@@ -353,23 +342,21 @@ public class MainActivity extends Activity {
                     //cv.put("_dlongitude",flLatReceived);
                     //flLatReceived, flLonReceived, flLatSaved, flLonSaved
                     long rowId = db.insert("CoordPoints", null, cv1);
-                    if(rowId!=-1)
-                        Log.d("TAG1", "Activity insertion complete. row ID " + rowId );
+                    if (rowId != -1)
+                        Log.d("TAG1", "Activity insertion complete. row ID " + rowId);
                     else
-                        Log.d("TAG1", "Activity insertion error " + rowId );
+                        Log.d("TAG1", "Activity insertion error " + rowId);
                     String urlParameters = "lat=" + latLonTime[0]
                             + "&long=" + latLonTime[1]
                             + "&time=" + getDate()
                             + "&descr=_ANDROID_ " + etCommentPoint.getText().toString()
                             + "&sender_id=" + android_id;
 
-                    Log.d("TAG1", "urlParameters: " +  urlParameters);
-                    //sendDataToServerByPost("http://maxbarannyk.ru/api/getip", urlParameters);
-                    /*String resultPostSend =*/ sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
-                    //Log.d("TAG1", "Send POST result: " + resultPostSend);
+                    Log.d("TAG1", "urlParameters: " + urlParameters);
+                    //sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
 
-                    //Toast.makeText(this, R.string.toast_point_saved, Toast.LENGTH_SHORT).show();
-                    //Toast.makeText(this, "resultPostSend=" + resultPostSend, Toast.LENGTH_SHORT).show();
+                    requestSenderHelper = new RequestSenderHelper(this, sendUrlPoint, urlParameters);
+                    requestSenderHelper.sendDataToServerByGet();
                 }
                 break;
             case R.id.btnLocationSettings:
@@ -378,27 +365,23 @@ public class MainActivity extends Activity {
 
             case R.id.buttonStartService:
                 Intent i = new Intent(this, MyService.class);
-                if(isGpsEnabled){//если сенсор не включен, то сервис упадет
-                    if(MyService.instance==null){
+                if (isGpsEnabled) {//если сенсор не включен, то сервис упадет
+                    if (MyService.instance == null) {
                         startService(i);
                         displayServiceStatus(1);
                         //isServiceStarted = true;
-                    }
-                    else{
+                    } else {
                         Toast.makeText(this, R.string.toast_service_alr_started, Toast.LENGTH_SHORT).show();
                     }
-                }
-                else
-                {
+                } else {
                     Toast.makeText(this, R.string.toast_service_alert_gps, Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.buttonStopService:
-                if(MyService.instance!=null) {
+                if (MyService.instance != null) {
                     stopService(new Intent(this, MyService.class));
                     // isServiceStarted = false;
-                }
-                else{
+                } else {
                     Toast.makeText(this, R.string.toast_service_alr_stopped, Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -408,129 +391,101 @@ public class MainActivity extends Activity {
                 break;
             case R.id.buttonExportBase:
                 File file;
-                String str="";
+                String str = "";
                 //TODO - AlertDialog ля выбора папки
                 if (docsFolder.exists()) {
                     //Toast.makeText(this, "Папка есть, попытка создания файла", Toast.LENGTH_SHORT).show();
-                    file = new File(docsFolder.getAbsolutePath(),"GpsTrackExport_"+getDate()+".csv");
+                    file = new File(docsFolder.getAbsolutePath(), "GpsTrackExport_" + getDate() + ".csv");
                     try {
                         file.createNewFile();
                         FileWriter f = new FileWriter(file);
                         //f.write(lastCoord + "\r\n");
                         try {
                             result = db.rawQuery("select * from Coordinates", null);
-                            while(result.moveToNext()){
+                            while (result.moveToNext()) {
                                 int locDateIndex = result.getColumnIndex("_dateDay");
                                 int locTimeIndex = result.getColumnIndex("_dateTime");
                                 int latIndex = result.getColumnIndex("_latitude");
                                 int lonIndex = result.getColumnIndex("_longitude");
-                                str+=result.getString(locDateIndex)+",";
-                                str+=result.getString(locTimeIndex)+",";
-                                str+=result.getString(latIndex)+",";
-                                str+=result.getString(lonIndex);
-                                str+="\r\n";
+                                str += result.getString(locDateIndex) + ",";
+                                str += result.getString(locTimeIndex) + ",";
+                                str += result.getString(latIndex) + ",";
+                                str += result.getString(lonIndex);
+                                str += "\r\n";
                                 f.write(str);
-                                str="";
+                                str = "";
                             }
-                        }
-                        catch (Exception e){
-                            tvDebug2.setText("Ошибка db.rawQuery: " +  e.getMessage());
-                            Log.d("TAG1", "Ошибка db.rawQuery: " +  e.getMessage());
+                        } catch (Exception e) {
+                            tvDebug2.setText("Ошибка db.rawQuery: " + e.getMessage());
+                            Log.d("TAG1", "Ошибка db.rawQuery: " + e.getMessage());
                         }
                         f.flush();
                         f.close();
                         Toast.makeText(this, R.string.toast_mesg_create_file_success, Toast.LENGTH_LONG).show();
                         tvDebug2.setText(R.string.toast_mesg_create_file_success);
-                    }catch (Exception fe){
+                    } catch (Exception fe) {
                         Toast.makeText(this, R.string.toast_mesg_error_create_file, Toast.LENGTH_SHORT).show();
-                        Log.d("TAG1", "Ошибка записи файла: " +  fe.getMessage());
+                        Log.d("TAG1", "Ошибка записи файла: " + fe.getMessage());
                         //tvDebug1.setText("Ошибка записи файла: " +  fe.getMessage());
                     }
-                }
-                else {
-                    Toast.makeText(MainActivity.this,  "Ошибка создания файла", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Ошибка создания файла", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.tvTitleServiceStatus:
             case R.id.tvTitleGPS:
-                if(MyService.instance!=null){
-                    Toast.makeText(MainActivity.this,  "Сервис запущен", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(MainActivity.this,  "Сервис остановлен", Toast.LENGTH_SHORT).show();
+                if (MyService.instance != null) {
+                    Toast.makeText(MainActivity.this, "Сервис запущен", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Сервис остановлен", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.buttonExportPoints:
                 File file1;
-                String str1="";
+                String str1 = "";
                 //TODO - AlertDialog ля выбора папки
                 if (docsFolder.exists()) {
                     //Toast.makeText(this, "Папка есть, попытка создания файла", Toast.LENGTH_SHORT).show();
-                    file1 = new File(docsFolder.getAbsolutePath(),"GpsPointsExport_"+getDate()+".csv");
+                    file1 = new File(docsFolder.getAbsolutePath(), "GpsPointsExport_" + getDate() + ".csv");
                     try {
                         file1.createNewFile();
                         FileWriter f = new FileWriter(file1);
                         //f.write(lastCoord + "\r\n");
                         try {
                             result = db.rawQuery("select * from CoordPoints", null);
-                            while(result.moveToNext()){
+                            while (result.moveToNext()) {
                                 int locDateIndex = result.getColumnIndex("_dateDay");
                                 int locTimeIndex = result.getColumnIndex("_dateTime");
                                 int latIndex = result.getColumnIndex("_latitude");
                                 int lonIndex = result.getColumnIndex("_longitude");
                                 int descrIndex = result.getColumnIndex("_description");
-                                str1+=result.getString(locDateIndex)+",";
-                                str1+=result.getString(locTimeIndex)+",";
-                                str1+=result.getString(latIndex)+",";
-                                str1+=result.getString(lonIndex)+",";
-                                str1+=result.getString(descrIndex);
-                                str1+="\r\n";
+                                str1 += result.getString(locDateIndex) + ",";
+                                str1 += result.getString(locTimeIndex) + ",";
+                                str1 += result.getString(latIndex) + ",";
+                                str1 += result.getString(lonIndex) + ",";
+                                str1 += result.getString(descrIndex);
+                                str1 += "\r\n";
                                 f.write(str1);
-                                str1="";
+                                str1 = "";
                             }
-                        }
-                        catch (Exception e){
-                            tvDebug2.setText("Ошибка db.rawQuery: " +  e.getMessage());
-                            Log.d("TAG1", "Ошибка db.rawQuery: " +  e.getMessage());
+                        } catch (Exception e) {
+                            tvDebug2.setText("Ошибка db.rawQuery: " + e.getMessage());
+                            Log.d("TAG1", "Ошибка db.rawQuery: " + e.getMessage());
                         }
                         f.flush();
                         f.close();
                         Toast.makeText(this, R.string.toast_mesg_create_file_success, Toast.LENGTH_LONG).show();
                         tvDebug2.setText(R.string.toast_mesg_create_file_success);
-                    }catch (Exception fe){
+                    } catch (Exception fe) {
                         Toast.makeText(this, R.string.toast_mesg_error_create_file, Toast.LENGTH_SHORT).show();
-                        Log.d("TAG1", "Ошибка записи файла: " +  fe.getMessage());
-                        tvDebug1.setText("Ошибка записи файла: " +  fe.getMessage());
+                        Log.d("TAG1", "Ошибка записи файла: " + fe.getMessage());
+                        tvDebug1.setText("Ошибка записи файла: " + fe.getMessage());
                     }
-                }
-                else {
-                    Toast.makeText(MainActivity.this,  "Ошибка создания файла", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Ошибка создания файла", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            case(R.id.buttonNetSave):
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)==
-                        PackageManager.PERMISSION_GRANTED)
-                {
-                    Log.d("TAG1", "INTERNET PERMISSION_GRANTED");
 
-                    Map<String, String> map = new HashMap<String, String>();
-                    map.put("android_id", android_id);
-                    map.put("user_login", user_login);
-                    map.put("lat", latLonTime[0]);
-                    map.put("lon", latLonTime[1]);
-                    map.put("date", getDate());
-                    JSONArray jsonArray = new JSONArray(Arrays.asList(map));
-                    Log.d("TAG1", "MA jsonArray=" + jsonArray);
-                    //testSend(android_id+"_"+latLonTime[0]+"_"+latLonTime[1]+"_"+getDate());
-                    testSend(jsonArray.toString());
-                }
-                else{
-                    Log.d("TAG1", "INTERNET DENY");
-                    ActivityCompat.requestPermissions(this, new String[] {
-                                    android.Manifest.permission.INTERNET },
-                            TAG_CODE_PERMISSION_INTERNET);
-                }
-                break;
         }
     }
 
@@ -539,151 +494,26 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    private void testSend(String dataSend){
-        user = "maxrexfax";
-        Log.d("TAG1", "private void test2 START");
-        final String finalUrl = sendUrl1+"&user="+user+ "&data="+dataSend;
-        Log.d("TAG1", "finalUrl===" + finalUrl);
-        Thread background = new Thread(new Runnable() {
-            // After call for background.start this run method call
-            public void run() {
-                try {
-                    try {
-                        Log.d("TAG1", "test2  TRY 0001");
-                        URL url = new URL(finalUrl);
-                        Log.d("TAG1", "test2  TRY 0002");
-                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                        Log.d("TAG", "test2  TRY 0003");
-                        if (con.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                            Log.d("TAG1", "TRY 0004  HttpURLConnection.HTTP_OK");
-                            //Если запрос выполнен удачно, читаем полученные данные и далее, делаем что-то
-                            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                            res = in.readLine();
-                            in.close();
-                            Log.d("TAG1", "TRY 0005  IF HTTP_OK res=" + res);
-                            //textView02.setText("Result: " + res);
-                            //String res = new BufferedReader(new InputStreamReader(con.getInputStream())).readLine();
-                        } else {
-                            Log.d("TAG1", "TRY 0006 con.getResponseCode()=" + con.getResponseCode());
-                            //Если запрос выполнен не удачно, делаем что-то другое
-                            res = "FAILURE!!";
-                            //textView02.setText("Result: " + res);
-                            Log.d("TAG1", "test2  007 else HTTP_FAIL res=" + res);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.d("TAG1", "008 private String getDataFromUrl catch IOException=" + e.getMessage());
 
-                        Toast.makeText(MainActivity.this,  e.getMessage(), Toast.LENGTH_LONG).show();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.d("TAG1", "009 private String getDataFromUrl catch Exception=" + e.getMessage() + " " + e.getLocalizedMessage());
-                        Toast.makeText(MainActivity.this,  e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                    Log.d("TAG1", "010 private String getDataFromUrl return result=" + res);
-                    //textView02.setText(res);
-                } catch (Throwable t) {
-                    // just end the background thread
-                    Log.d("TAG1", "public void run Thread  exception " + t);                       }
-            }
-
-
-
-        });
-        // Start Thread
-        background.start();
-    }
-
-    public boolean isExternalStorageWritable()
-    {
+    public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return (state.equals(Environment.MEDIA_MOUNTED));
     }
+
     private String getDate() {
         java.sql.Date currentDate = new java.sql.Date(System.currentTimeMillis());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
         return dateFormat.format(currentDate);
     }
 
-    private boolean isServiceStarted(){
-        if(MyService.instance!=null){
-            Toast.makeText(MainActivity.this,  "Сервис запущен", Toast.LENGTH_SHORT).show();
+    private boolean isServiceStarted() {
+        if (MyService.instance != null) {
+            Toast.makeText(MainActivity.this, "Сервис запущен", Toast.LENGTH_SHORT).show();
             return true;
-        }
-        else{
-            Toast.makeText(MainActivity.this,  "Сервис остановлен", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(MainActivity.this, "Сервис остановлен", Toast.LENGTH_SHORT).show();
             return false;
         }
-    }
-
-    public void sendDataToServerByPost(String urlToSendData, String urlParameters) {
-
-
-        Handler handler = new Handler();  //Optional. Define as a variable in your activity.
-
-        Runnable r = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                HttpURLConnection connection = null;
-                String res = "Empty";
-                try {
-
-                    //Create connection
-                    URL url = new URL(urlToSendData);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setRequestProperty("Content-Type",
-                            "application/x-www-form-urlencoded");
-
-                    connection.setRequestProperty("Content-Length",
-                            Integer.toString(urlParameters.getBytes().length));
-                    connection.setRequestProperty("Content-Language", "en-US");
-
-                    connection.setUseCaches(false);
-                    connection.setDoOutput(true);
-
-                    //Send request
-                    DataOutputStream wr = new DataOutputStream (
-                            connection.getOutputStream());
-                    wr.writeBytes(urlParameters);
-                    wr.close();
-
-                    //Get Response
-                    InputStream is = connection.getInputStream();
-                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                    StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
-                    String line;
-                    while ((line = rd.readLine()) != null) {
-                        response.append(line);
-                        response.append('\r');
-                    }
-                    rd.close();
-                    res = response.toString();
-                    Log.d("TAG1", "Net send return result=" + res);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.d("TAG1", "Net send return result=" + e.getMessage());
-                } finally {
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-                }
-                final String fRes = res;
-                handler.post(new Runnable()  //If you want to update the UI, queue the code on the UI thread
-                {
-                    public void run()
-                    {
-                        makeToast(fRes);
-                    }
-                });
-            }
-        };
-
-        Thread t = new Thread(r);
-        t.start();
-
     }
 
     public void makeToast(String message) {
@@ -699,5 +529,13 @@ public class MainActivity extends Activity {
             return true;
         }
         return false;
+    }
+
+    private void checkIfInternetIsOn() {
+        if (isNetwork(getApplicationContext())) {
+            Toast.makeText(getApplicationContext(), "Internet Connected", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Internet Is Not Connected", Toast.LENGTH_SHORT).show();
+        }
     }
 }
