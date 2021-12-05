@@ -38,7 +38,7 @@ public class RequestSenderHelper {
                 try {
 
                     //Create connection
-                    URL url = new URL(_urlToSendRequest);
+                    URL url = new URL(_urlToSendRequest);Log.d("TAG1", "LINE 41");
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("GET");
                     connection.setRequestProperty("Content-Type",
@@ -49,7 +49,7 @@ public class RequestSenderHelper {
                     connection.setRequestProperty("Content-Language", "en-US");
 
                     connection.setUseCaches(false);
-                    connection.setDoOutput(true);
+                    connection.setDoOutput(true);Log.d("TAG1", "LINE 52");
 
                     //Send request
                     DataOutputStream wr = new DataOutputStream(
@@ -68,10 +68,10 @@ public class RequestSenderHelper {
                     }
                     rd.close();
                     res = response.toString();
-                    Log.d("TAG1", "Net send return result=" + res);
+                    Log.d("TAG1", "Net send return result 71=" + res);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.d("TAG1", "Net send return result=" + e.getMessage());
+                    Log.d("TAG1", "Net send return result 74=" + e.getMessage());
                 } finally {
                     if (connection != null) {
                         connection.disconnect();

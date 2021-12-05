@@ -46,7 +46,7 @@ public class MyService extends Service {
     private Context context;
     private SQLiteConnector connector;
     private SQLiteDatabase db;
-    private SimpleCursorAdapter adapter;
+    private SimpleCursorAdapter adaptesender_idr;
     private Cursor result;
     public static MyService instance = null;
 
@@ -60,9 +60,7 @@ public class MyService extends Service {
     private String android_id;
     private String user_login;
 
-    String sendUrl1 = "http://maxbarannyk.ru/gps-serv/func.php?command=insertcoord";
-    String sendUrlData = "http://maxbarannyk.ru/saveDataQwu.php";
-    String sendUrlPoint = "http://maxbarannyk.ru/savePointQwu.php";
+    String urlToSendData = "http://maxbarannyk.ru/saveDataQwu.php";
     String dataToSend = "emptyString";
     String res = "EMPTY";
     String user = "maxrexfax";
@@ -221,7 +219,7 @@ public class MyService extends Service {
                     + "&time=" + getDate()
                     + "&sender_id=" + android_id;
 
-            requestSenderHelper = new RequestSenderHelper(this, sendUrlData, urlParameters);
+            requestSenderHelper = new RequestSenderHelper(this, urlToSendData, urlParameters);
             requestSenderHelper.sendDataToServerByGet();
             //testSend(jsonArray.toString());
         } else {

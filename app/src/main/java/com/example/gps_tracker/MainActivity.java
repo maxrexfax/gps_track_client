@@ -83,8 +83,7 @@ public class MainActivity extends Activity {
     public String android_id;
     private RequestSenderHelper requestSenderHelper;
 
-    String sendUrlData = "http://maxbarannyk.ru/saveDataQwu.php";
-    String sendUrlPoint = "http://maxbarannyk.ru/savePointQwu.php";
+    String urlToSendData = "http://maxbarannyk.ru/saveDataQwu.php";
     String res = "EMPTY";
     String user = "";
     private String user_login;
@@ -110,7 +109,7 @@ public class MainActivity extends Activity {
         tvDebug1 = (TextView) findViewById(R.id.tvDebugging1);
         tvDebug2 = (TextView) findViewById(R.id.tvDebugging2);
         tvDebug3 = (TextView) findViewById(R.id.tvDebugging3);
-
+        tvDebug3.setText("Android id:" + android_id);
         tvLongInMain = (TextView) findViewById(R.id.tvLongtitudeStatus);
         tvLatInMain = (TextView) findViewById(R.id.tvLatitudeStatus);
         tvTimeInMain = (TextView) findViewById(R.id.tvTimeStatus);
@@ -324,7 +323,7 @@ public class MainActivity extends Activity {
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.buttonGetCoord:
+            case R.id.buttonSavePointCoordinates:
                 if (latLonTime[0] == null) {
                     Toast.makeText(this, R.string.tv_state_not_set, Toast.LENGTH_SHORT).show();
                 } else {
@@ -355,7 +354,7 @@ public class MainActivity extends Activity {
                     Log.d("TAG1", "urlParameters: " + urlParameters);
                     //sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
 
-                    requestSenderHelper = new RequestSenderHelper(this, sendUrlPoint, urlParameters);
+                    requestSenderHelper = new RequestSenderHelper(this, urlToSendData, urlParameters);
                     requestSenderHelper.sendDataToServerByGet();
                 }
                 break;

@@ -129,7 +129,7 @@
             android:text="@string/tv_et_comment"
             />
         <Button
-            android:id="@+id/buttonGetCoord"
+            android:id="@+id/buttonSavePointCoordinates"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="onClick"
