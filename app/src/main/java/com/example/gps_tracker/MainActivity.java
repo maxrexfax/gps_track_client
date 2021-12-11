@@ -150,6 +150,7 @@ public class MainActivity extends Activity {
         }
 
         checkIfInternetIsOn();
+        Log.d("TAG1", "MainActivity: onCreate");
     }
 
 
