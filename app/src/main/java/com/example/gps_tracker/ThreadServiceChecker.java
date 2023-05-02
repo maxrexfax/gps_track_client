@@ -13,7 +13,7 @@ public class ThreadServiceChecker extends Thread {
         isWorking = true;
         locManager = locationManager;
         srv = service;
-        //Log.d("TAG1", "ThreadServiceChecker constructor");
+        //HelperClass.logString("ThreadServiceChecker constructor");
     }
     @Override
     public void run() {
@@ -25,7 +25,7 @@ public class ThreadServiceChecker extends Thread {
                     }
                     else{
                         if(MyService.instance!=null) {
-                           // Log.d("TAG1", "ThreadServiceChecker GPS_PROVIDER check failed");
+                           // HelperClass.logString("ThreadServiceChecker GPS_PROVIDER check failed");
                             srv.onDestroy();
                             // isServiceStarted = false;
                         }

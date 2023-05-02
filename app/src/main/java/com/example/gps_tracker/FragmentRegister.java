@@ -8,11 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link FragmentRegister#newInstance} factory method to
- * create an instance of this fragment.
- */
+import com.example.gps_tracker.Helpers.HelperClass;
+
 public class FragmentRegister extends Fragment {
 
     public FragmentRegister() {
@@ -23,7 +20,7 @@ public class FragmentRegister extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.d("TAG1", "FragmentRegister: onCreateView");
+        HelperClass.logString("FragmentRegister: onCreateView");
         return inflater.inflate(R.layout.fragment_register, container, false);
     }
 }

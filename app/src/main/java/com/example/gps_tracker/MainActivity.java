@@ -1,16 +1,7 @@
 package com.example.gps_tracker;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -31,30 +22,24 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.provider.Settings.Secure;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.example.gps_tracker.Helpers.HelperClass;
+import com.example.gps_tracker.Helpers.WebSendHelper;
 
 public class MainActivity extends Activity {
 
     private static final int TAG_CODE_PERMISSION_LOCATION = 444;
     private static final int TAG_CODE_PERMISSION_STORAGE = 345;
     private static final int TAG_CODE_PERMISSION_INTERNET = 6567;
+
+
     TextView tvEnabledGPS, tvTitleServiceStat, textViewServiceStatus;
     TextView tvDebug1, tvDebug2, tvDebug3;
     TextView tvLongInMain, tvLatInMain, tvTimeInMain;
@@ -83,6 +68,8 @@ public class MainActivity extends Activity {
     public String android_id;
     private RequestSenderHelper requestSenderHelper;
 
+    private WebSendHelper _webSendHelper;
+
     String urlToSendData = "http://maxbarannyk.ru/saveDataQwu.php";
     String res = "EMPTY";
     String user = "";
@@ -102,6 +89,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        _webSendHelper = new WebSendHelper();
         android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
         user_login = "max_admin";
         tvEnabledGPS = (TextView) findViewById(R.id.tvEnabledGPS);
@@ -149,8 +137,14 @@ public class MainActivity extends Activity {
             isThreadStarted = true;
         }
 
+        sendAndroidIdAndDeviceNameToServer();
         checkIfInternetIsOn();
-        Log.d("TAG1", "MainActivity: onCreate");
+        HelperClass.logString("MainActivity: onCreate");
+    }
+
+    private void sendAndroidIdAndDeviceNameToServer() {
+        String deviceName = android.os.Build.MODEL;
+        _webSendHelper.sendAppCredentials(android_id, deviceName);
     }
 
 
@@ -175,15 +169,15 @@ public class MainActivity extends Activity {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
                 if (!docsFolder.exists()) {
-                    Log.d("TAG", "Папка отсутствует, попытка создания");
+                    HelperClass.logString( "Папка отсутствует, попытка создания");
                     isCreated = docsFolder.mkdir();
                     if (isCreated) {
-                        Log.d("TAG", "Папка создана");
+                        HelperClass.logString( "Папка создана");
                     } else {
-                        Log.d("TAG", "Ошибка создания папки");
+                        HelperClass.logString("Ошибка создания папки");
                     }
                 } else {
-                    Log.d("TAG", "Папка существует, создавать не нужно");
+                    HelperClass.logString( "Папка существует, создавать не нужно");
                 }
             } else {
                 ActivityCompat.requestPermissions(this, new String[]{
@@ -324,7 +318,7 @@ public class MainActivity extends Activity {
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.buttonSavePointCoordinates:
+            case R.id.button_save_point_coordinates:
                 if (latLonTime[0] == null) {
                     Toast.makeText(this, R.string.tv_state_not_set, Toast.LENGTH_SHORT).show();
                 } else {
@@ -343,20 +337,21 @@ public class MainActivity extends Activity {
                     //flLatReceived, flLonReceived, flLatSaved, flLonSaved
                     long rowId = db.insert("CoordPoints", null, cv1);
                     if (rowId != -1)
-                        Log.d("TAG1", "Activity insertion complete. row ID " + rowId);
+                        HelperClass.logString("Activity insertion complete. row ID " + rowId);
                     else
-                        Log.d("TAG1", "Activity insertion error " + rowId);
+                        HelperClass.logString( "Activity insertion error " + rowId);
                     String urlParameters = "lat=" + latLonTime[0]
                             + "&long=" + latLonTime[1]
                             + "&time=" + getDate()
+                            + "&" + _webSendHelper.SECRET_KEY + "=" + _webSendHelper.SECRET
                             + "&descr=_ANDROID_ " + etCommentPoint.getText().toString()
-                            + "&sender_id=" + android_id;
+                            + "&android_id=" + android_id;
 
-                    Log.d("TAG1", "urlParameters: " + urlParameters);
+                    HelperClass.logString( "urlParameters: " + urlParameters);
                     //sendDataToServerByPost("http://maxbarannyk.ru/savePointQwu.php", urlParameters);
-
-                    requestSenderHelper = new RequestSenderHelper(this, urlToSendData, urlParameters);
-                    requestSenderHelper.sendDataToServerByGet();
+                    _webSendHelper.sendGpsPoint(urlParameters);
+//                    requestSenderHelper = new RequestSenderHelper(this, urlToSendData, urlParameters);
+//                    requestSenderHelper.sendDataToServerByGet();
                 }
                 break;
             case R.id.btnLocationSettings:
@@ -417,7 +412,7 @@ public class MainActivity extends Activity {
                             }
                         } catch (Exception e) {
                             tvDebug2.setText("Ошибка db.rawQuery: " + e.getMessage());
-                            Log.d("TAG1", "Ошибка db.rawQuery: " + e.getMessage());
+                            HelperClass.logString( "Ошибка db.rawQuery: " + e.getMessage());
                         }
                         f.flush();
                         f.close();
@@ -425,7 +420,7 @@ public class MainActivity extends Activity {
                         tvDebug2.setText(R.string.toast_mesg_create_file_success);
                     } catch (Exception fe) {
                         Toast.makeText(this, R.string.toast_mesg_error_create_file, Toast.LENGTH_SHORT).show();
-                        Log.d("TAG1", "Ошибка записи файла: " + fe.getMessage());
+                        HelperClass.logString( "Ошибка записи файла: " + fe.getMessage());
                         //tvDebug1.setText("Ошибка записи файла: " +  fe.getMessage());
                     }
                 } else {
@@ -470,7 +465,7 @@ public class MainActivity extends Activity {
                             }
                         } catch (Exception e) {
                             tvDebug2.setText("Ошибка db.rawQuery: " + e.getMessage());
-                            Log.d("TAG1", "Ошибка db.rawQuery: " + e.getMessage());
+                            HelperClass.logString("Ошибка db.rawQuery: " + e.getMessage());
                         }
                         f.flush();
                         f.close();
@@ -478,7 +473,7 @@ public class MainActivity extends Activity {
                         tvDebug2.setText(R.string.toast_mesg_create_file_success);
                     } catch (Exception fe) {
                         Toast.makeText(this, R.string.toast_mesg_error_create_file, Toast.LENGTH_SHORT).show();
-                        Log.d("TAG1", "Ошибка записи файла: " + fe.getMessage());
+                        HelperClass.logString( "Ошибка записи файла: " + fe.getMessage());
                         tvDebug1.setText("Ошибка записи файла: " + fe.getMessage());
                     }
                 } else {

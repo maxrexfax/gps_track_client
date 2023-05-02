@@ -1,12 +1,7 @@
-package com.example.gps_tracker;
+package com.example.gps_tracker.Helpers;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Handler;
-import android.util.Log;
-import android.widget.Toast;
-
-import com.example.gps_tracker.Helpers.HelperClass;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -15,49 +10,58 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class RequestSenderHelper {
+public class WebSendHelper {
+    public final String TAG_LOG = "TAG_FOR_LOG";
+//    private Context _context;
+//    private Activity activity;
+    public final String SECRET = "94956781";
+    public final String SECRET_KEY = "abyrvalg";
+    private String _urlToAdvInfo = "https://api.maxbarannyk.ru/create-new-device";
+    private String _urlToSendGpsData = "https://api.maxbarannyk.ru/save-gps-data";
+    private String _urlToSendGpsPoint = "https://api.maxbarannyk.ru/save-gps-point";
 
-    private Activity _activity;
-    private Context _context;
-    private String _urlToSendRequest;
-    private String _dataToSend;
-
-    public RequestSenderHelper(Context context, String urlToSendRequest, String dataToSend) {
-        //this._activity = activity;
-        this._context = context;
-        this._urlToSendRequest = urlToSendRequest;
-        this._dataToSend = dataToSend;
+    public WebSendHelper() {
     }
 
-    public void sendDataToServerByGet() {
-        Handler handler = new Handler();  //Optional. Define as a variable in your activity.
+    public void sendGpsData(String message) {
+        sendData(message, _urlToSendGpsData);
+    }
 
+    public void sendGpsPoint(String message) {
+        sendData(message, _urlToSendGpsPoint);
+    }
+
+    public void sendAppCredentials(String androidId, String deviceName) {
+        HelperClass.logString("WebSendHelper sendData() worked");
+        String data = "android_id=" + androidId + "&device_name=" + deviceName;
+        sendData(data, _urlToAdvInfo);
+    }
+    public void sendData(String messageToSend, String urlString) {
+        HelperClass.logString("WebSendHelper sendData() worked");
         Runnable r = new Runnable() {
             @Override
             public void run() {
                 HttpURLConnection connection = null;
                 String res = "Empty";
                 try {
-
                     //Create connection
-                    URL url = new URL(_urlToSendRequest);
-                    HelperClass.logString( "LINE 44");
+                    URL url = new URL(urlString);
                     connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
+                    connection.setRequestMethod("POST");
                     connection.setRequestProperty("Content-Type",
                             "application/x-www-form-urlencoded");
-
+                    HelperClass.logString("WebSendHelper messageToSend:" + messageToSend);
                     connection.setRequestProperty("Content-Length",
-                            Integer.toString(_dataToSend.getBytes().length));
+                            Integer.toString(messageToSend.getBytes().length));
                     connection.setRequestProperty("Content-Language", "en-US");
 
                     connection.setUseCaches(false);
-                    connection.setDoOutput(true);HelperClass.logString("LINE 55");
+                    connection.setDoOutput(true);
 
                     //Send request
                     DataOutputStream wr = new DataOutputStream(
                             connection.getOutputStream());
-                    wr.writeBytes(_dataToSend);
+                    wr.writeBytes(messageToSend);
                     wr.close();
 
                     //Get Response
@@ -71,31 +75,21 @@ public class RequestSenderHelper {
                     }
                     rd.close();
                     res = response.toString();
-                    HelperClass.logString("Net send return result 71=" + res);
+                    HelperClass.logString("WebSendHelper got result:" + res);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    HelperClass.logString("Net send return result 74=" + e.getMessage());
+                     HelperClass.logString("WebSendHelper Net send catch Exception:" + e.getMessage());
                 } finally {
                     if (connection != null) {
                         connection.disconnect();
                     }
                 }
-                final String fRes = res;
-                handler.post(new Runnable()  //If you want to update the UI, queue the code on the UI thread
-                {
-                    public void run() {
-                        makeToast(fRes);
-                    }
-                });
+
             }
         };
 
         Thread t = new Thread(r);
         t.start();
-
     }
 
-    public void makeToast(String message) {
-        Toast.makeText(_context, message, Toast.LENGTH_SHORT).show();
-    }
 }

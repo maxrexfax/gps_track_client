@@ -16,7 +16,7 @@ public class ThreadChecker extends Thread {
     public ThreadChecker(MainActivity act){
         this.activity = act;
         isWorking = true;
-        //Log.d("TAG1", "ThreadChecker constructor");
+        //HelperClass.logString("ThreadChecker constructor");
     }
     public void threadCheckerStop(){
         isWorking = false;

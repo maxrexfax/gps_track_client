@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
+import com.example.gps_tracker.Helpers.HelperClass;
+
 public class LoginActivity extends AppCompatActivity {
 
     FragmentLogin fragmentLogin;
@@ -20,7 +22,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("TAG1", "LoginActivity: onCreate");
+        HelperClass.logString("LoginActivity: onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         btnShowLogin = findViewById(R.id.btnShowLogin);
@@ -49,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void skipAndStartMA(View view){
-        Log.d("TAG1", "LoginActivity: skipAndStartMA");
+        HelperClass.logString("LoginActivity: skipAndStartMA");
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(intent);
     }

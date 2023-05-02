@@ -18,6 +18,8 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.gps_tracker.Helpers.HelperClass;
+
 public class DataActivity extends AppCompatActivity {
 
     private SQLiteConnector connector;
@@ -63,13 +65,13 @@ public class DataActivity extends AppCompatActivity {
     @Override
     public boolean onContextItemSelected(MenuItem item){
         //находим на кого нажали
-        Log.d("----", "onContextItemSelected ");
+        HelperClass.logString( "onContextItemSelected ");
         AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         //находим текствью на которуюж нажали и ее айди
         TextView tvv = adapter.getView(acmi.position, null, null).findViewById(R.id.tvItemId);
         db.execSQL("DELETE FROM CoordPoints WHERE _id = " + tvv.getText().toString());//удаляем этот текствью
         refreshMeth();
-        Log.d("----", "onContextItemSelected " + tvv.getText().toString() );
+        HelperClass.logString("onContextItemSelected " + tvv.getText().toString() );
         return true;
     }
     @Override

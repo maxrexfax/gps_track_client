@@ -35,6 +35,9 @@ import java.util.Map;
 
 import android.provider.Settings.Secure;
 
+import com.example.gps_tracker.Helpers.HelperClass;
+import com.example.gps_tracker.Helpers.WebSendHelper;
+
 import java.util.Arrays;
 
 import org.json.JSONArray;
@@ -48,9 +51,11 @@ public class MyService extends Service {
     private SQLiteDatabase db;
     private SimpleCursorAdapter adaptesender_idr;
     private Cursor result;
+    WebSendHelper _webSendHelper;
     public static MyService instance = null;
 
     public MyService() {
+        _webSendHelper = new WebSendHelper();
         Context context = this;
     }
 
@@ -60,7 +65,7 @@ public class MyService extends Service {
     private String android_id;
     private String user_login;
 
-    String urlToSendData = "http://maxbarannyk.ru/saveDataQwu.php";
+    String urlToSendData = "https://maxbarannyk.ru/saveDataQwu.php";
     String dataToSend = "emptyString";
     String res = "EMPTY";
     String user = "maxrexfax";
@@ -75,7 +80,7 @@ public class MyService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d("TAG1", "Service onCreate worked");
+        HelperClass.logString("Service onCreate worked");
         android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
         user_login = "max_admin";
         Toast.makeText(this, "Tracking started!!", Toast.LENGTH_SHORT).show();
@@ -103,7 +108,7 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //Log.d("TAG1", "Service onStartCommand.worked");
+        //HelperClass.logString("Service onStartCommand.worked");
         //return super.onStartCommand(intent, flags, startId);
         //return START_STICKY;
         return START_REDELIVER_INTENT;
@@ -111,7 +116,7 @@ public class MyService extends Service {
 
     @Override
     public void onDestroy() {
-        //Log.d("TAG1", "Service onDestroy worked");
+        //HelperClass.logString("Service onDestroy worked");
         //Toast.makeText(this, "Service onDestroy!!", Toast.LENGTH_SHORT).show();
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED &&
@@ -160,7 +165,7 @@ public class MyService extends Service {
     };
 
     private void showLocation(Location location) {
-        //Log.d("TAG1", "Service showLocation worked");
+        //HelperClass.logString("Service showLocation worked");
         if (location == null)
             return;
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
@@ -170,7 +175,7 @@ public class MyService extends Service {
     }
 
     private String formatLocation(Location location) {
-        //Log.d("TAG1", "Service formatLocation worked");
+        //HelperClass.logString("Service formatLocation worked");
         if (location == null)
             return "";
         String latTmp = "", lonTmp = "";
@@ -194,15 +199,15 @@ public class MyService extends Service {
         cv.put("_delivered", 0);
         long rowId = db.insert("Coordinates", null, cv);
         if (rowId != -1)
-            Log.d("TAG1", "service insertion complete. row ID " + rowId);
+            HelperClass.logString("service insertion complete. row ID " + rowId);
         else
-            Log.d("TAG1", "service insertion error " + rowId);
+            HelperClass.logString("service insertion error " + rowId);
 
 
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) ==
                 PackageManager.PERMISSION_GRANTED) {
-            //Log.d("TAG1", "INTERNET PERMISSION_GRANTED");
+            //HelperClass.logString("INTERNET PERMISSION_GRANTED");
             Map<String, String> map = new HashMap<String, String>();
             map.put("android_id", android_id);
             map.put("user_login", user_login);
@@ -210,20 +215,21 @@ public class MyService extends Service {
             map.put("lon", lonTmp);
             map.put("date", getDate());
             JSONArray jsonArray = new JSONArray(Arrays.asList(map));
-            Log.d("TAG1", "Service jsonArray=" + jsonArray);
+            HelperClass.logString("Service jsonArray=" + jsonArray);
             //testSend(android_id + "_" + latTmp+"_"+lonTmp+"_"+getDate());
 
 
             String urlParameters = "lat=" + latTmp
                     + "&long=" + lonTmp
                     + "&time=" + getDate()
-                    + "&sender_id=" + android_id;
-
-            requestSenderHelper = new RequestSenderHelper(this, urlToSendData, urlParameters);
-            requestSenderHelper.sendDataToServerByGet();
+                    + "&" + _webSendHelper.SECRET_KEY + "=" + _webSendHelper.SECRET
+                    + "&android_id=" + android_id;
+            _webSendHelper.sendGpsData(urlParameters);
+//            requestSenderHelper = new RequestSenderHelper(this, urlToSendData, urlParameters);
+//            requestSenderHelper.sendDataToServerByGet();
             //testSend(jsonArray.toString());
         } else {
-            Log.d("TAG1", "Service - INTERNET DENY");
+           HelperClass.logString("Service - INTERNET DENY");
         }
         return "";
     }
