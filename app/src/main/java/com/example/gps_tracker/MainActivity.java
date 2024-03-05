@@ -70,7 +70,8 @@ public class MainActivity extends Activity {
 
     private WebSendHelper _webSendHelper;
 
-    String urlToSendData = "http://maxbarannyk.ru/saveDataQwu.php";
+    String urlToSendData = "https://api.maxbarannyk.loc/save-gps-point";
+//    String urlToSendData = "https://api.maxbarannyk.ru/save-gps-point";
     String res = "EMPTY";
     String user = "";
     private String user_login;
@@ -325,8 +326,9 @@ public class MainActivity extends Activity {
                     //TODO вот тут сохраняем координаты временной точки во вторую таблицу
                     ContentValues cv1 = new ContentValues();//хранилище
                     String dates[] = latLonTime[2].split(" ");
-                    cv1.put("_dateDay", dates[0]);
-                    cv1.put("_dateTime", dates[1]);
+                    cv1.put("_dateDayTime", latLonTime[2]);
+//                    cv1.put("_dateDay", dates[0]);
+//                    cv1.put("_dateTime", dates[1]);
                     cv1.put("_latitude", latLonTime[0]);
                     cv1.put("_longitude", latLonTime[1]);
                     cv1.put("_description", etCommentPoint.getText().toString());
@@ -344,7 +346,7 @@ public class MainActivity extends Activity {
                             + "&long=" + latLonTime[1]
                             + "&time=" + getDate()
                             + "&" + _webSendHelper.SECRET_KEY + "=" + _webSendHelper.SECRET
-                            + "&descr=_ANDROID_ " + etCommentPoint.getText().toString()
+                            + "&description=_ANDROID_ " + etCommentPoint.getText().toString()
                             + "&android_id=" + android_id;
 
                     HelperClass.logString( "urlParameters: " + urlParameters);
