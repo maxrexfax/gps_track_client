@@ -81,11 +81,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="70"
-                android:text="@string/tv_longtitude_label"
+                android:text="@string/tv_longitude_label"
                 android:textSize="@dimen/text_lat_lon_time_main"
                 />
             <TextView
-                android:id="@+id/tvLongtitudeStatus"
+                android:id="@+id/tvLongitudeStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="30"
@@ -136,9 +136,6 @@
             android:onClick="onClick"
             android:text="@string/btn_get_coordinates"
             />
-        <Space
-            android:layout_width="1dp"
-            android:layout_height="15dp"/>
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -162,9 +159,6 @@
                 android:text="@string/tv_wait"
                 />
         </LinearLayout>
-        <Space
-            android:layout_width="1dp"
-            android:layout_height="15dp"/>
 
 
         <LinearLayout

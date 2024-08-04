@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
         tvDebug2 = (TextView) findViewById(R.id.tvDebugging2);
         tvDebug3 = (TextView) findViewById(R.id.tvDebugging3);
         tvDebug3.setText("Android id:" + android_id);
-        tvLongInMain = (TextView) findViewById(R.id.tvLongtitudeStatus);
+        tvLongInMain = (TextView) findViewById(R.id.tvLongitudeStatus);
         tvLatInMain = (TextView) findViewById(R.id.tvLatitudeStatus);
         tvTimeInMain = (TextView) findViewById(R.id.tvTimeStatus);
         tvTitleServiceStat = (TextView) findViewById(R.id.tvTitleServiceStatus);

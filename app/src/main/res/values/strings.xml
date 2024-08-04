@@ -5,19 +5,20 @@
     <string name="action_register">Register</string>
     <string name="provider_gps">GPS tracker</string>
     <string name="location_settings">Open GPS settings</string>
-    <string name="tv_status">Monitoring status</string>
-    <string name="tv_label_coordinates">Your current coordinates</string>
-    <string name="tv_label_tracking_status">Monitoring your movement</string>
-    <string name="tv_wait">Waiting</string>
-    <string name="tv_state_not_set">Waiting data</string>
-    <string name="tv_latitude_label">Latitude</string>
-    <string name="tv_longtitude_label">Longtitude</string>
-    <string name="tv_time_label">Time</string>
+    <string name="tv_choose_record_name">Choose record name</string>
+    <string name="tv_et_comment">Enter comment for this point here</string>
     <string name="tv_gps_sensor_on">GPS ON</string>
     <string name="tv_gps_sensor_off">GPS OFF</string>
-    <string name="tv_et_comment">Enter comment for this point here</string>
+    <string name="tv_label_coordinates">Your current coordinates</string>
+    <string name="tv_label_tracking_status">Monitoring your movement</string>
+    <string name="tv_latitude_label">Latitude</string>
+    <string name="tv_longitude_label">Longtitude</string>
+    <string name="tv_status">Monitoring status</string>
+    <string name="tv_state_not_set">Waiting data</string>
+    <string name="tv_time_label">Time</string>
     <string name="tv_tracking_off">Location tracking is OFF right now</string>
     <string name="tv_tracking_on">Location tracking works now!</string>
+    <string name="tv_wait">Waiting</string>
 
     <string name="tv_tracking_off_short">Tracking OFF</string>
     <string name="tv_tracking_on_short">Tracking ON</string>
@@ -27,7 +28,10 @@
     <string name="tv_label_save_data">Save tracks and point</string>
 
     <string name="tv_list_of_all_points">All saved points</string>
+    <string name="text_attach_gps_coordinates">Attach GPS coordinates?</string>
+    <string name="text_record_name">Record name</string>
 
+    <string name="btn_delete_data">Delete NOW</string>
     <string name="btn_gps_status">Open location (GPS) settings</string>
     <string name="btn_get_coordinates">Save current coordinates</string>
     <string name="btn_start_service">Start tracking</string>
@@ -43,7 +47,9 @@
     <string name="btn_save_data">Track export to file</string>
     <string name="btn_net_send">Save point to server</string>
     <string name="btn_save_points">Points export to file</string>
-    <string name="btn_delete_data">Delete NOW</string>
+    <string name="btn_record_start">Start record</string>
+    <string name="btn_record_pause">Pause record</string>
+    <string name="btn_record_stop">Stop record</string>
 
     <string name="toast_service_alr_started">Сервис уже был запущен</string>
     <string name="toast_service_alr_stopped">Сервис и так остановлен!</string>
